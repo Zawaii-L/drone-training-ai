@@ -1,6 +1,6 @@
-import os
 import streamlit as st
 from openai import OpenAI
+
 
 # =========================
 # 页面设置
@@ -11,23 +11,24 @@ st.set_page_config(
     layout="centered"
 )
 
+
 # =========================
 # 页面样式
 # =========================
 st.markdown(
     """
     <style>
-    /* 隐藏顶部加载状态 */
-    [data-testid="stStatusWidget"] {
-        display: none !important;
-    }
-
-    /* 隐藏部分 Streamlit 装饰元素 */
+    /* 隐藏顶部 Streamlit 装饰区域 */
     [data-testid="stDecoration"] {
         display: none !important;
     }
 
-    /* 隐藏右上角菜单 */
+    /* 隐藏顶部状态加载区域 */
+    [data-testid="stStatusWidget"] {
+        display: none !important;
+    }
+
+    /* 隐藏 Streamlit 默认菜单 */
     #MainMenu {
         visibility: hidden;
     }
@@ -37,13 +38,18 @@ st.markdown(
         visibility: hidden;
     }
 
-    /* 缩小页面上下空白 */
+    /* 隐藏顶部 Header */
+    header {
+        visibility: hidden;
+    }
+
+    /* 缩小页面顶部和底部空白 */
     .block-container {
-        
+        padding-top: 1.5rem;
         padding-bottom: 1rem;
     }
 
-    /* 标题样式 */
+    /* 自定义标题 */
     .custom-title {
         font-size: 27px;
         line-height: 1.35;
@@ -52,17 +58,27 @@ st.markdown(
         color: #202124;
     }
 
-    /* 副标题样式 */
+    /* 自定义副标题 */
     .custom-caption {
         font-size: 15px;
         color: #777777;
         margin-bottom: 20px;
     }
 
+    /* 常见问题标题 */
+    .question-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-top: 12px;
+        margin-bottom: 10px;
+    }
+
+    /* 手机页面适配 */
     @media (max-width: 768px) {
         .block-container {
             padding-left: 1rem;
             padding-right: 1rem;
+            padding-top: 1rem;
         }
 
         .custom-title {
@@ -72,11 +88,16 @@ st.markdown(
         .custom-caption {
             font-size: 14px;
         }
+
+        .question-title {
+            font-size: 17px;
+        }
     }
     </style>
     """,
     unsafe_allow_html=True
 )
+
 
 # =========================
 # 页面标题
@@ -87,31 +108,48 @@ st.markdown(
 )
 
 st.markdown(
-    '<div class="custom-caption">欢迎咨询翀舟无人机培训课程、费用、报名条件及培训安排</div>',
+    '<div class="custom-caption">欢迎咨询无人机培训课程、费用、报名条件及培训安排</div>',
     unsafe_allow_html=True
 )
 
+
 # =========================
-# 读取知识库
+# 读取 Markdown 知识库
 # =========================
 try:
     with open("无人机培训招生知识库.md", "r", encoding="utf-8") as f:
         knowledge = f.read()
+
 except FileNotFoundError:
-    st.error("没有找到《无人机培训招生知识库.md》，请检查文件是否和 app.py 在同一个文件夹。")
+    st.error(
+        "没有找到《无人机培训招生知识库.md》，"
+        "请检查它是否和 app.py 在同一个文件夹。"
+    )
     st.stop()
+
+
+# =========================
+# 读取 Streamlit Secrets
+# =========================
+try:
+    api_key = st.secrets["ZHIPUAI_API_KEY"]
+
+except Exception:
+    st.error(
+        "没有读取到 ZHIPUAI_API_KEY。"
+        "请在 Streamlit Cloud 的 Settings → Secrets 中配置 API Key。"
+    )
+    st.stop()
+
 
 # =========================
 # 创建大模型客户端
 # =========================
-# 本地测试时，可以直接填写你的 API Key
-# 正式部署时，建议使用环境变量或 Streamlit Secrets
-api_key = st.secrets["ZHIPUAI_API_KEY"]
-
 client = OpenAI(
     api_key=api_key,
     base_url="https://open.bigmodel.cn/api/paas/v4/"
 )
+
 
 # =========================
 # 系统提示词
@@ -133,30 +171,93 @@ system_prompt = f"""
 7. 涉及价格、报名条件、考试政策、法律法规等问题时，
    如果知识库资料不足，也要提供招生处联系方式。
 8. 不要输出“转人工”“转人工通知”等字样。
-9. 回答要简洁、自然，适合直接回复招生咨询客户。
+9. 不要编造优惠、班次、考试安排、住宿条件或其他知识库没有的信息。
+10. 回答要简洁、自然，适合直接回复招生咨询客户。
 
 【知识库】
 {knowledge}
 """
 
+
 # =========================
-# 保存聊天记录
+# 初始化聊天记录
 # =========================
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# 显示历史消息
+if "selected_question" not in st.session_state:
+    st.session_state.selected_question = None
+
+
+# =========================
+# 快捷问题选择函数
+# =========================
+def select_question(question):
+    st.session_state.selected_question = question
+
+
+# =========================
+# 常见问题快捷按钮
+# =========================
+st.markdown(
+    '<div class="question-title">常见问题</div>',
+    unsafe_allow_html=True
+)
+
+quick_questions = [
+    "培训费用是多少？",
+    "培训地点在哪里？",
+    "零基础可以学吗？",
+    "培训周期多久？",
+    "提供住宿吗？",
+    "怎么联系招生处？"
+]
+
+# 两列布局，手机上比较适合
+cols = st.columns(2)
+
+for i, item in enumerate(quick_questions):
+    with cols[i % 2]:
+        st.button(
+            item,
+            key=f"quick_question_{i}",
+            use_container_width=True,
+            on_click=select_question,
+            args=(item,)
+        )
+
+
+# =========================
+# 显示历史聊天记录
+# =========================
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# =========================
-# 用户输入
-# =========================
-question = st.chat_input("请输入你想咨询的问题，例如：培训费用是多少？")
 
+# =========================
+# 获取用户输入
+# =========================
+typed_question = st.chat_input(
+    "请输入你想咨询的问题，例如：培训费用是多少？"
+)
+
+
+# 如果用户点击快捷问题，就使用快捷问题
+if st.session_state.selected_question:
+    question = st.session_state.selected_question
+    st.session_state.selected_question = None
+
+else:
+    question = typed_question
+
+
+# =========================
+# 调用 AI 回答
+# =========================
 if question:
-    # 显示用户问题
+
+    # 保存并显示用户问题
     st.session_state.messages.append({
         "role": "user",
         "content": question
@@ -165,9 +266,10 @@ if question:
     with st.chat_message("user"):
         st.markdown(question)
 
-    # 调用 AI
+    # 调用大模型
     with st.chat_message("assistant"):
         with st.spinner("正在查询资料，请稍候……"):
+
             try:
                 response = client.chat.completions.create(
                     model="glm-4-flash",
@@ -181,9 +283,10 @@ if question:
 
                 answer = response.choices[0].message.content
 
+                # 显示 AI 回答
                 st.markdown(answer)
 
-                # 保存 AI 回复
+                # 保存 AI 回答
                 st.session_state.messages.append({
                     "role": "assistant",
                     "content": answer
@@ -193,15 +296,25 @@ if question:
                 st.error("暂时无法连接咨询系统，请稍后再试。")
                 st.caption(f"错误信息：{e}")
 
+
 # =========================
 # 侧边栏
 # =========================
 with st.sidebar:
+
     st.subheader("招生处联系方式")
+
     st.write("📞 联系电话：13702945420")
     st.write("💬 微信号：zjj86685588")
     st.write("👤 联系人：郑先生")
 
-    if st.button("清空聊天记录"):
+    st.divider()
+
+    st.subheader("使用说明")
+
+    st.write("你可以点击上方常见问题，也可以直接在下方输入问题。")
+
+    if st.button("清空聊天记录", use_container_width=True):
         st.session_state.messages = []
+        st.session_state.selected_question = None
         st.rerun()
