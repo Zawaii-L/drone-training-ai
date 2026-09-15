@@ -6,13 +6,90 @@ from openai import OpenAI
 # 页面设置
 # =========================
 st.set_page_config(
-    page_title="翀舟无人机培训在线咨询",
+    page_title="翱舟无人机培训在线咨询",
     page_icon="🚁",
     layout="centered"
 )
 
-st.title("🚁 翀舟无人机培训在线咨询")
-st.caption("欢迎咨询无人机培训课程、费用、报名条件及培训安排")
+# =========================
+# 页面样式
+# =========================
+st.markdown(
+    """
+    <style>
+    /* 隐藏顶部加载状态 */
+    [data-testid="stStatusWidget"] {
+        display: none !important;
+    }
+
+    /* 隐藏部分 Streamlit 装饰元素 */
+    [data-testid="stDecoration"] {
+        display: none !important;
+    }
+
+    /* 隐藏右上角菜单 */
+    #MainMenu {
+        visibility: hidden;
+    }
+
+    /* 隐藏底部页脚 */
+    footer {
+        visibility: hidden;
+    }
+
+    /* 缩小页面上下空白 */
+    .block-container {
+        padding-top: 1.5rem;
+        padding-bottom: 1rem;
+    }
+
+    /* 标题样式 */
+    .custom-title {
+        font-size: 27px;
+        line-height: 1.35;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: #202124;
+    }
+
+    /* 副标题样式 */
+    .custom-caption {
+        font-size: 15px;
+        color: #777777;
+        margin-bottom: 20px;
+    }
+
+    @media (max-width: 768px) {
+        .block-container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        .custom-title {
+            font-size: 24px;
+        }
+
+        .custom-caption {
+            font-size: 14px;
+        }
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# =========================
+# 页面标题
+# =========================
+st.markdown(
+    '<div class="custom-title">🚁 翱舟无人机培训在线咨询</div>',
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    '<div class="custom-caption">欢迎咨询无人机培训课程、费用、报名条件及培训安排</div>',
+    unsafe_allow_html=True
+)
 
 # =========================
 # 读取知识库
