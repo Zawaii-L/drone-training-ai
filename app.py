@@ -29,10 +29,10 @@ except FileNotFoundError:
 # =========================
 # 本地测试时，可以直接填写你的 API Key
 # 正式部署时，建议使用环境变量或 Streamlit Secrets
-api_key = os.getenv("ZHIPUAI_API_KEY", "我的密钥")
+api_key = st.secrets["ZHIPUAI_API_KEY"]
 
 client = OpenAI(
-    api_key=os.getenv("ZHIPUAI_API_KEY"),
+    api_key=api_key,
     base_url="https://open.bigmodel.cn/api/paas/v4/"
 )
 
