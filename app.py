@@ -39,7 +39,7 @@ st.markdown(
 
     /* 缩小页面上下空白 */
     .block-container {
-        padding-top: 1.5rem;
+        
         padding-bottom: 1rem;
     }
 
