@@ -6,7 +6,7 @@ from openai import OpenAI
 # 页面设置
 # =========================
 st.set_page_config(
-    page_title="翱舟无人机培训在线咨询",
+    page_title="翀舟无人机培训在线咨询",
     page_icon="🚁",
     layout="centered"
 )
@@ -82,12 +82,12 @@ st.markdown(
 # 页面标题
 # =========================
 st.markdown(
-    '<div class="custom-title">🚁 翱舟无人机培训在线咨询</div>',
+    '<div class="custom-title">🚁 翀舟无人机培训在线咨询</div>',
     unsafe_allow_html=True
 )
 
 st.markdown(
-    '<div class="custom-caption">欢迎咨询无人机培训课程、费用、报名条件及培训安排</div>',
+    '<div class="custom-caption">欢迎咨询翀舟无人机培训课程、费用、报名条件及培训安排</div>',
     unsafe_allow_html=True
 )
 
